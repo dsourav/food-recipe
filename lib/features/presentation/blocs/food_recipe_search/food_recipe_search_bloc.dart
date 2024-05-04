@@ -1,6 +1,8 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:food_recipe/core/db/local_db.dart';
 import 'package:food_recipe/core/utils/constant.dart';
+import 'package:food_recipe/core/utils/extensions.dart';
 import 'package:food_recipe/features/domain/entities/food_recipe_entity.dart';
 import 'package:food_recipe/features/domain/usecases/get_all_food_recipe_usecase.dart';
 import 'package:injectable/injectable.dart';
@@ -15,12 +17,15 @@ class FoodRecipeSearchBloc extends Bloc<FoodRecipeSearchEvent, FoodRecipeSearchS
   final GetAllRecipeUseCase getAllRecipeUseCase;
   int page = 1;
   List<FoodRecipeEntity> foodRecipes = [];
+
   FoodRecipeSearchBloc(this.getAllRecipeUseCase) : super(FoodRecipeSearchInitial()) {
     on<FoodRecipeSearchEvent>((event, emit) async {
       if (event is FoodRecipeSearchTermChanged) {
         await _handleFoodRecipeSearchTermChanged(event, emit);
       } else if (event is FoodRecipeLoadMore) {
         await _handleFoodRecipeLoadMore(event, emit);
+      } else if (event is FoodRecipeUpdateLocal) {
+        _handleFoodRecipeUpdateLocal(event, emit);
       }
     }, transformer: (eventStream, eventHandler) {
       final nonDebounceEventStream = eventStream.where(
@@ -57,8 +62,8 @@ class FoodRecipeSearchBloc extends Bloc<FoodRecipeSearchEvent, FoodRecipeSearchS
 
     response.fold(
         (error) => emit(FoodRecipeLoadingFailed()),
-        (items) =>
-            emit(FoodRecipesLoaded(foodRecipeEntity: items, hasReachedMax: items.length < Constant.itemPerPage)));
+        (items) => emit(FoodRecipesLoaded(
+            foodRecipeEntity: items.withLocalSavedFlag, hasReachedMax: items.length < Constant.itemPerPage)));
   }
 
   Future _handleFoodRecipeLoadMore(FoodRecipeLoadMore event, Emitter<FoodRecipeSearchState> emit) async {
@@ -75,14 +80,34 @@ class FoodRecipeSearchBloc extends Bloc<FoodRecipeSearchEvent, FoodRecipeSearchS
 
       response.fold((error) {}, (items) {
         foodRecipes = currentState.foodRecipeEntity + items;
+        final recipesWithSavedFlag = foodRecipes.withLocalSavedFlag;
         if (items.isEmpty) {
           emit(currentState.copyWith(hasReachedMax: true));
         } else {
-          emit(currentState.copyWith(foodRecipeEntity: foodRecipes, hasReachedMax: false));
+          emit(currentState.copyWith(foodRecipeEntity: recipesWithSavedFlag, hasReachedMax: false));
         }
       });
     }
   }
 
   bool _hasReachedMax(FoodRecipeSearchState state) => state is FoodRecipesLoaded && state.hasReachedMax;
+
+  void _handleFoodRecipeUpdateLocal(FoodRecipeUpdateLocal event, Emitter<FoodRecipeSearchState> emit) {
+    final currentState = state;
+
+    if (currentState is FoodRecipesLoaded) {
+      final allEntity = currentState.foodRecipeEntity;
+
+      final index = allEntity.indexOf(event.entity);
+      if (index < 0) return;
+
+      final selectedRecipe = allEntity[index];
+      selectedRecipe.isSavedLocally = !selectedRecipe.isSavedLocally;
+      allEntity[index] = selectedRecipe;
+
+      emit(FoodRecipeSearchInitial());
+      emit(currentState.copyWith(foodRecipeEntity: allEntity));
+    }
+    LocalDB.updateLocalRecipe(event.entity);
+  }
 }

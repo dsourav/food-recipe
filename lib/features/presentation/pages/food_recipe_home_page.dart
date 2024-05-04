@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:food_recipe/core/utils/constant.dart';
+import 'package:food_recipe/features/presentation/pages/food_recipe_saved_page.dart';
 import 'package:food_recipe/features/presentation/pages/food_recipe_search_page.dart';
-import 'package:food_recipe/features/presentation/pages/saved_food_recipe_page.dart';
 
 class FoodRecipeHomePage extends StatelessWidget {
   FoodRecipeHomePage({super.key});
@@ -19,7 +19,7 @@ class FoodRecipeHomePage extends StatelessWidget {
       body: ValueListenableBuilder<int>(
           valueListenable: _selectedIndex,
           builder: (context, selectedIndex, child) =>
-              selectedIndex == 0 ? FoodRecipeSearchPage() : const SavedFoodRecipePage()),
+              selectedIndex == 0 ? FoodRecipeSearchPage() : const FoodRecipeSavedPage()),
       bottomNavigationBar: ValueListenableBuilder<int>(
         valueListenable: _selectedIndex,
         builder: (context, selectedIndex, child) => BottomNavigationBar(

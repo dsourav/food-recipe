@@ -17,3 +17,9 @@ class FoodRecipeLoadMore extends FoodRecipeSearchEvent {
   final String searchTerm;
   const FoodRecipeLoadMore({required this.searchTerm});
 }
+
+class FoodRecipeUpdateLocal extends FoodRecipeSearchEvent {
+  final FoodRecipeEntity entity;
+
+  const FoodRecipeUpdateLocal({required this.entity});
+}
