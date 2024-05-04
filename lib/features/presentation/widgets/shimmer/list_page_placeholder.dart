@@ -11,13 +11,15 @@ class ListPagePlaceholder extends StatelessWidget {
       baseColor: Colors.grey.shade300,
       highlightColor: Colors.grey.shade100,
       enabled: true,
-      child: Column(
-        children: List.generate(
-            8,
-            (index) => const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: ContentPlaceholder(lineType: ContentLineType.threeLines),
-                )).toList(),
+      child: SingleChildScrollView(
+        child: Column(
+          children: List.generate(
+              8,
+              (index) => const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: ContentPlaceholder(lineType: ContentLineType.threeLines),
+                  )).toList(),
+        ),
       ),
     );
   }

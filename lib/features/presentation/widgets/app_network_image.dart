@@ -30,7 +30,7 @@ class AppNetworkImage extends StatelessWidget {
               ),
             ),
             placeholder: (context, url) =>
-                const SizedBox(height: 20.0, width: 20.0, child: Center(child: CircularProgressIndicator())),
+                const Center(child: SizedBox(height: 20.0, width: 20.0, child: CircularProgressIndicator())),
             errorWidget: (context, url, error) =>
                 errorWidget ??
                 ErrorImage(

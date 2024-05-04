@@ -1,8 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:food_recipe/core/utils/app_decorations.dart';
+import 'package:food_recipe/core/utils/extensions.dart';
+import 'package:food_recipe/features/presentation/blocs/food_recipe_search/food_recipe_search_bloc.dart';
 import 'package:food_recipe/features/presentation/widgets/app_network_image.dart';
+import 'package:food_recipe/features/presentation/widgets/food_recipe_item.dart';
+import 'package:food_recipe/features/presentation/widgets/load_failed_item.dart';
+import 'package:food_recipe/features/presentation/widgets/shimmer/list_item_placeholder.dart';
+import 'package:food_recipe/features/presentation/widgets/shimmer/list_page_placeholder.dart';
+import 'package:food_recipe/features/presentation/widgets/shimmer/placeholers.dart';
 
 class FoodRecipeSearchPage extends StatelessWidget {
-  const FoodRecipeSearchPage({super.key});
+  FoodRecipeSearchPage({super.key});
+
+  final _recipeNameController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -11,77 +22,55 @@ class FoodRecipeSearchPage extends StatelessWidget {
       child: Column(
         children: [
           TextFormField(
+            controller: _recipeNameController,
+            onChanged: (value) {
+              context.read<FoodRecipeSearchBloc>().add(FoodRecipeSearchTermChanged(searchTerm: value));
+            },
             decoration: InputDecoration(
               hintText: 'Write Recipe Name',
-              suffixIcon: IconButton(onPressed: () {}, icon: const Icon(Icons.search)),
+              suffixIcon: IconButton(
+                  onPressed: () {
+                    context
+                        .read<FoodRecipeSearchBloc>()
+                        .add(FoodRecipeSearchTermChanged(searchTerm: _recipeNameController.text));
+                  },
+                  icon: const Icon(Icons.search)),
             ),
           ),
 
-          Container(
-            height: 203,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8.0),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.3), // #000000 with 20% opacity
-                  offset: const Offset(0, 4), // X: 0, Y: 4
-                  blurRadius: 4, // Blur: 4
-                  spreadRadius: 0, // Spread: 0
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                Expanded(
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: ClipRRect(
-                      borderRadius:
-                          const BorderRadius.only(topLeft: Radius.circular(8.0), topRight: Radius.circular(8.0)),
-                      child: Stack(
-                        children: [
-                          const AppNetworkImage(
-                            size: Size(double.infinity, double.infinity),
-                            imageUrl: "https://via.placeholder.com/140x100",
-                            imageShape: ImageShape.square,
-                            fit: BoxFit.cover,
-                          ),
-                          Positioned(
-                            top: 1,
-                            right: 1,
-                            child: Container(
-                                height: 32,
-                                width: 32,
-                                margin: const EdgeInsets.all(10.0),
-                                decoration:
-                                    BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8.0)),
-                                child: const Icon(Icons.bookmark_outline)),
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  height: 50.0,
-                  width: double.infinity,
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 10.0),
-                    child: const Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "Alu vorta pasta likewise sjkajsjaksdkjansdbjadnjadnajkndjsandak",
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        )
-                      ],
-                    ),
-                  ),
-                )
-              ],
+          Expanded(
+            child: BlocBuilder<FoodRecipeSearchBloc, FoodRecipeSearchState>(
+              builder: (context, state) {
+                if (state is FoodRecipeLoading) {
+                  return const ListPagePlaceholder();
+                } else if (state is FoodRecipeLoadingFailed) {
+                  return const LoadFailedItem();
+                } else if (state is FoodRecipesLoaded) {
+                  final items = state.foodRecipeEntity;
+
+                  return NotificationListener<ScrollNotification>(
+                    onNotification: (notification) => notification.handleScroll(loadData: () {
+                      context
+                          .read<FoodRecipeSearchBloc>()
+                          .add(FoodRecipeLoadMore(searchTerm: _recipeNameController.text));
+                    }),
+                    child: ListView.builder(
+                        itemCount: state.hasReachedMax ? items.length : items.length + 1,
+                        itemBuilder: (context, index) {
+                          if (index >= items.length) {
+                            return const ListItemPlaceHolder();
+                          }
+
+                          return FoodRecipeItem(
+                            foodRecipeEntity: items[index],
+                            onTapSave: () {},
+                          );
+                        }),
+                  );
+                }
+
+                return const SizedBox();
+              },
             ),
           )
           // Expanded(child: child)

@@ -6,3 +6,14 @@ sealed class FoodRecipeSearchEvent extends Equatable {
   @override
   List<Object> get props => [];
 }
+
+class FoodRecipeSearchTermChanged extends FoodRecipeSearchEvent {
+  final String searchTerm;
+
+  const FoodRecipeSearchTermChanged({required this.searchTerm});
+}
+
+class FoodRecipeLoadMore extends FoodRecipeSearchEvent {
+  final String searchTerm;
+  const FoodRecipeLoadMore({required this.searchTerm});
+}

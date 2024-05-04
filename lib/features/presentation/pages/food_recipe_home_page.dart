@@ -11,17 +11,18 @@ class FoodRecipeHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<int>(
-      valueListenable: _selectedIndex,
-      builder: (context, selectedIndex, child) => Scaffold(
-        appBar: selectedIndex == 0
-            ? AppBar(
-                title: SvgPicture.asset(Constant.appLogo),
-                centerTitle: true,
-              )
-            : null,
-        body: selectedIndex == 0 ? FoodRecipeSearchPage() : SavedFoodRecipePage(),
-        bottomNavigationBar: BottomNavigationBar(
+    return Scaffold(
+      appBar: AppBar(
+        title: SvgPicture.asset(Constant.appLogo),
+        centerTitle: true,
+      ),
+      body: ValueListenableBuilder<int>(
+          valueListenable: _selectedIndex,
+          builder: (context, selectedIndex, child) =>
+              selectedIndex == 0 ? FoodRecipeSearchPage() : const SavedFoodRecipePage()),
+      bottomNavigationBar: ValueListenableBuilder<int>(
+        valueListenable: _selectedIndex,
+        builder: (context, selectedIndex, child) => BottomNavigationBar(
           items: const [
             BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
             BottomNavigationBarItem(icon: Icon(Icons.bookmark), label: ''),
